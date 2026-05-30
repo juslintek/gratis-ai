@@ -141,4 +141,124 @@ final class AICommand
 
         return implode("\n", $lines);
     }
+
+    /**
+     * Generate a blog post draft.
+     *
+     * ## OPTIONS
+     * <topic>
+     * : Topic or title for the post.
+     * [--publish]
+     * : Publish immediately instead of draft.
+     * [--model=<model>]
+     * : Override model.
+     *
+     * ## EXAMPLES
+     *     wp gratis-ai generate-post "How to optimize WordPress database"
+     *
+     * @subcommand generate-post
+     * @when after_wp_load
+     */
+    public function generate_post($args, $assoc_args): void
+    {
+        $provider = new OpenAICompatible();
+        if (!$provider->isAvailable()) {
+            \WP_CLI::error("No AI provider configured.");
+        }
+
+        $topic = $args[0];
+        $prompt = "Write a WordPress blog post about: {$topic}\n\nFormat as WordPress block editor HTML (Gutenberg blocks). Include:\n- An engaging introduction paragraph\n- 2-3 H2 sections with content\n- A code block if relevant\n- A conclusion\n\nUse <!-- wp:paragraph --> and <!-- wp:heading --> block syntax. Keep it under 800 words.";
+
+        \WP_CLI::log("Generating post about: {$topic}...");
+        $content = $provider->complete($prompt, array_merge($assoc_args, ['max_tokens' => 2048]));
+
+        $status = isset($assoc_args['publish']) ? 'publish' : 'draft';
+        $post_id = wp_insert_post([
+            'post_title'   => $topic,
+            'post_content' => $content,
+            'post_status'  => $status,
+            'post_type'    => 'post',
+        ]);
+
+        if (is_wp_error($post_id)) {
+            \WP_CLI::error("Failed to create post: " . $post_id->get_error_message());
+        }
+
+        \WP_CLI::success("Created post #{$post_id} ({$status}): " . get_permalink($post_id));
+    }
+
+    /**
+     * Generate a block pattern.
+     *
+     * ## OPTIONS
+     * <description>
+     * : What the pattern should look like.
+     * [--name=<name>]
+     * : Pattern file name (without .php).
+     *
+     * ## EXAMPLES
+     *     wp gratis-ai generate-pattern "testimonials grid with 3 cards, dark theme"
+     *
+     * @subcommand generate-pattern
+     * @when after_wp_load
+     */
+    public function generate_pattern($args, $assoc_args): void
+    {
+        $provider = new OpenAICompatible();
+        if (!$provider->isAvailable()) {
+            \WP_CLI::error("No AI provider configured.");
+        }
+
+        $desc = $args[0];
+        $prompt = "Generate a WordPress block pattern for: {$desc}\n\nOutput ONLY the PHP file content with the pattern header comment and block markup. Use this format:\n<?php\n/**\n * Title: [title]\n * Slug: gratis-theme/[slug]\n * Categories: gratis-builder\n */\n?>\n[block markup here]\n\nUse dark theme colors (#0d0f12 background, #ffffff text, #22C55E accent). Use proper WordPress block comments.";
+
+        \WP_CLI::log("Generating pattern: {$desc}...");
+        $content = $provider->complete($prompt, ['max_tokens' => 2048]);
+
+        $name = $assoc_args['name'] ?? sanitize_title($desc);
+        $path = get_stylesheet_directory() . "/patterns/{$name}.php";
+
+        if (file_exists($path)) {
+            \WP_CLI::error("Pattern already exists: {$path}");
+        }
+
+        file_put_contents($path, $content);
+        \WP_CLI::success("Pattern saved: {$path}");
+    }
+
+    /**
+     * Rewrite/improve existing content.
+     *
+     * ## OPTIONS
+     * <post_id>
+     * : Post ID to rewrite.
+     * [--instruction=<instruction>]
+     * : How to rewrite (default: improve clarity and SEO).
+     *
+     * ## EXAMPLES
+     *     wp gratis-ai rewrite 42 --instruction="make it more concise"
+     *
+     * @when after_wp_load
+     */
+    public function rewrite($args, $assoc_args): void
+    {
+        $provider = new OpenAICompatible();
+        if (!$provider->isAvailable()) {
+            \WP_CLI::error("No AI provider configured.");
+        }
+
+        $post = get_post((int) $args[0]);
+        if (!$post) {
+            \WP_CLI::error("Post not found.");
+        }
+
+        $instruction = $assoc_args['instruction'] ?? 'Improve clarity, readability, and SEO. Keep the same structure and block format.';
+        $prompt = "Rewrite this WordPress post content. Instruction: {$instruction}\n\nOriginal content:\n{$post->post_content}\n\nOutput the improved content in the same WordPress block format.";
+
+        \WP_CLI::log("Rewriting post #{$post->ID}: {$post->post_title}...");
+        $content = $provider->complete($prompt, ['max_tokens' => 3000]);
+
+        wp_update_post(['ID' => $post->ID, 'post_content' => $content]);
+        \WP_CLI::success("Post #{$post->ID} rewritten. Review at: " . get_edit_post_link($post->ID, 'raw'));
+    }
 }
