@@ -18,6 +18,9 @@ defined('ABSPATH') || exit;
 require_once __DIR__ . '/autoload.php';
 
 add_action('plugins_loaded', function () {
+    // WordPress 7.0 Abilities API
+    \Gratis\AI\AbilitiesIntegration::register();
+
     if (defined('WP_CLI') && WP_CLI) {
         \WP_CLI::add_command('gratis-ai', \Gratis\AI\CLI\AICommand::class);
     }
