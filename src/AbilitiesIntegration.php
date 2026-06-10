@@ -13,11 +13,20 @@ final class AbilitiesIntegration
             return;
         }
 
+        add_action('wp_abilities_api_categories_init', [__CLASS__, 'registerCategories']);
+        add_action('wp_abilities_api_init', [__CLASS__, 'registerAbilities']);
+    }
+
+    public static function registerCategories(): void
+    {
         wp_register_ability_category('gratis-ai', [
             'label'       => 'Gratis AI',
             'description' => 'AI-powered content and site management abilities',
         ]);
+    }
 
+    public static function registerAbilities(): void
+    {
         wp_register_ability('gratis-ai/generate-content', [
             'label'       => 'Generate Content',
             'description' => 'Generate blog post content from a topic or prompt',
