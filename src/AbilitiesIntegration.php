@@ -94,8 +94,8 @@ final class AbilitiesIntegration
     public static function cacheRecommendations(array $input): array
     {
         $recs = ['Enable page caching for anonymous visitors'];
-        if (class_exists('VLT\CacheManager\Diagnostics\CapabilityDetector')) {
-            $caps = \VLT\CacheManager\Diagnostics\CapabilityDetector::detect();
+        if (class_exists('Gratis\Cache\Diagnostics\CapabilityDetector')) {
+            $caps = \Gratis\Cache\Diagnostics\CapabilityDetector::detect();
             if (!($caps['ext-redis'] ?? false)) $recs[] = 'Install Redis for object caching';
             if (!($caps['ext-igbinary'] ?? false)) $recs[] = 'Install igbinary for faster serialization';
         }

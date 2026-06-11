@@ -112,8 +112,8 @@ final class MCPServer
 
     private static function toolSearch(array $input): array
     {
-        if (class_exists('VLT\CacheManager\Search\SearchIndex')) {
-            $results = \VLT\CacheManager\Search\SearchIndex::search($input['query'] ?? '', 10);
+        if (class_exists('Gratis\Cache\Search\SearchIndex')) {
+            $results = \Gratis\Cache\Search\SearchIndex::search($input['query'] ?? '', 10);
             return array_map(fn($r) => ['id' => $r['post_id'], 'title' => get_the_title($r['post_id']), 'url' => get_permalink($r['post_id'])], $results);
         }
         $posts = get_posts(['s' => $input['query'] ?? '', 'numberposts' => 10]);
