@@ -11,8 +11,8 @@ use Gratis\AI\Provider\OpenAICompatible;
  * 2. Free tier providers (Groq free, Cerebras free, Together.ai free, HuggingFace)
  * 3. Local model (Ollama at localhost:11434)
  */
-final class ModelRouter
-{
+final class ModelRouter {
+
     /** @var array Free providers that offer API access without payment */
     private const FREE_PROVIDERS = [
         'groq' => [
@@ -42,8 +42,7 @@ final class ModelRouter
     ];
 
     /** Get the best available provider. */
-    public static function resolve(): OpenAICompatible
-    {
+    public static function resolve(): OpenAICompatible {
         // 1. User's own configured endpoint
         $userEndpoint = get_option('gratis_ai_endpoint', '');
         $userKey = get_option('gratis_ai_api_key', '');
@@ -65,8 +64,7 @@ final class ModelRouter
     }
 
     /** Get info about available providers. */
-    public static function providers(): array
-    {
+    public static function providers(): array {
         $result = [];
 
         // User's own
@@ -93,8 +91,7 @@ final class ModelRouter
     }
 
     /** Get free provider signup instructions. */
-    public static function freeProviderGuide(): string
-    {
+    public static function freeProviderGuide(): string {
         $guide = "Free AI providers (no credit card required):\n\n";
         foreach (self::FREE_PROVIDERS as $name => $config) {
             $guide .= "  {$name}:\n";

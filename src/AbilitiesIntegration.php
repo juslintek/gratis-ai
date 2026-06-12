@@ -5,10 +5,9 @@ namespace Gratis\AI;
  * WordPress 7.0 Abilities API integration.
  * Registers AI abilities that can be invoked by any AI agent, browser extension, or MCP client.
  */
-final class AbilitiesIntegration
-{
-    public static function register(): void
-    {
+final class AbilitiesIntegration {
+
+    public static function register(): void {
         if (!function_exists('wp_register_ability_category') || !function_exists('wp_register_ability')) {
             return;
         }
@@ -17,16 +16,14 @@ final class AbilitiesIntegration
         add_action('wp_abilities_api_init', [__CLASS__, 'registerAbilities']);
     }
 
-    public static function registerCategories(): void
-    {
+    public static function registerCategories(): void {
         wp_register_ability_category('gratis-ai', [
             'label'       => 'Gratis AI',
             'description' => 'AI-powered content and site management abilities',
         ]);
     }
 
-    public static function registerAbilities(): void
-    {
+    public static function registerAbilities(): void {
         wp_register_ability('gratis-ai/generate-content', [
             'label'       => 'Generate Content',
             'description' => 'Generate blog post content from a topic or prompt',
@@ -72,8 +69,7 @@ final class AbilitiesIntegration
         ]);
     }
 
-    public static function generateContent(array $input): array
-    {
+    public static function generateContent(array $input): array {
         $provider = new Provider\OpenAICompatible();
         if (!$provider->isAvailable()) {
             return ['content' => '', 'title' => $input['topic'], 'error' => 'No AI provider configured'];
@@ -82,17 +78,16 @@ final class AbilitiesIntegration
         return ['content' => $content, 'title' => $input['topic']];
     }
 
-    public static function analyzeSEO(array $input): array
-    {
+    public static function analyzeSEO(array $input): array {
         $provider = new Provider\OpenAICompatible();
         if (!$provider->isAvailable()) return ['score' => 0, 'recommendations' => ['Configure AI provider']];
         $html = wp_remote_retrieve_body(wp_remote_get($input['url'], ['timeout' => 10]));
-        $result = $provider->complete("Analyze SEO for this content (first 2000 chars): " . substr(strip_tags($html), 0, 2000), ['max_tokens' => 500]);
+        $result = $provider->complete('Analyze SEO for this content (first 2000 chars): ' . substr(wp_strip_all_tags($html), 0, 2000), ['max_tokens' => 500]);
         return ['score' => 75, 'recommendations' => explode("\n", $result)];
     }
 
-    public static function cacheRecommendations(array $input): array
-    {
+    public static function cacheRecommendations(array $input): array {
+        unset($input);
         $recs = ['Enable page caching for anonymous visitors'];
         if (class_exists('Gratis\Cache\Diagnostics\CapabilityDetector')) {
             $caps = \Gratis\Cache\Diagnostics\CapabilityDetector::detect();
