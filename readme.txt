@@ -48,6 +48,19 @@ No. Unless you explicitly configure an external service (such as a CDN or SMTP h
 
 Open an issue on the plugin's GitHub repository.
 
+== Third-Party Services ==
+
+This plugin sends data to external AI providers when you configure an API key and use content generation features.
+
+= OpenAI-compatible API providers =
+
+When configured, your prompts and content context are sent to the configured endpoint (e.g. OpenAI, Anthropic, or a self-hosted model) for AI processing.
+
+* OpenAI: [Terms of Use](https://openai.com/policies/terms-of-use) | [Privacy Policy](https://openai.com/policies/privacy-policy)
+* Anthropic: [Terms of Service](https://www.anthropic.com/legal/consumer-terms) | [Privacy Policy](https://www.anthropic.com/legal/privacy)
+
+No data is sent to any external service unless you explicitly configure an API endpoint and key in the plugin settings. The plugin does not phone home or transmit analytics.
+
 == Changelog ==
 
 = 2.0.0 =
