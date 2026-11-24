@@ -1,6 +1,6 @@
 # Gratis AI
 
-Optional AI assistance for WordPress. Part of the [Gratis Suite](https://github.com/juslintek/gratis-suite).
+Optional AI assistance for WordPress. Part of the [Gratis Suite](https://gratis.superglobalsdevelopment.com).
 
 ## Principles
 - Free core is fully usable without AI
