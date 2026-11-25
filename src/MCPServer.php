@@ -60,8 +60,9 @@ final class MCPServer {
     }
 
     public static function executeTool(\WP_REST_Request $request): \WP_REST_Response {
-        $tool = $request->get_param('name');
-        $input = $request->get_param('input') ?? [];
+        $tool      = sanitize_key((string) $request->get_param('name'));
+        $raw_input = $request->get_param('input');
+        $input     = is_array($raw_input) ? $raw_input : [];
 
         $result = match ($tool) {
             'get_posts'     => self::toolGetPosts($input),
@@ -115,11 +116,15 @@ final class MCPServer {
     }
 
     private static function toolSearch(array $input): array {
+        $query = sanitize_text_field((string) ($input['query'] ?? ''));
+        if ('' === $query) {
+            return [];
+        }
         if (class_exists('Gratis\Cache\Search\SearchIndex')) {
-            $results = \Gratis\Cache\Search\SearchIndex::search($input['query'] ?? '', 10);
+            $results = \Gratis\Cache\Search\SearchIndex::search($query, 10);
             return array_map(fn($r) => ['id' => $r['post_id'], 'title' => get_the_title($r['post_id']), 'url' => get_permalink($r['post_id'])], $results);
         }
-        $posts = get_posts(['s' => $input['query'] ?? '', 'numberposts' => 10]);
+        $posts = get_posts(['s' => $query, 'numberposts' => 10]);
         return array_map(fn($p) => ['id' => $p->ID, 'title' => $p->post_title, 'url' => get_permalink($p)], $posts);
     }
 
@@ -130,14 +135,18 @@ final class MCPServer {
 
     private static function toolAnalytics(array $input): array {
         if (!class_exists('Gratis\Analytics\Store')) return ['error' => 'Analytics not active'];
-        $days = $input['days'] ?? 7;
+        $days = max(1, min(365, (int) ($input['days'] ?? 7)));
         return \Gratis\Analytics\Store::stats(gmdate('Y-m-d 00:00:00', strtotime("-{$days} days")), gmdate('Y-m-d 23:59:59'));
     }
 
     private static function toolAIGenerate(array $input): array {
+        $prompt = sanitize_textarea_field((string) ($input['prompt'] ?? ''));
+        if ('' === $prompt) {
+            return ['error' => 'Prompt cannot be empty'];
+        }
         $provider = ModelRouter::resolve();
         if (!$provider->isAvailable()) return ['error' => 'No AI provider available'];
-        $result = $provider->complete($input['prompt'] ?? '', ['max_tokens' => 1024]);
+        $result = $provider->complete($prompt, ['max_tokens' => 1024]);
         return ['content' => $result];
     }
 }
