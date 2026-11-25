@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI;
 
+defined('ABSPATH') || exit;
 /**
  * Encrypted API key storage.
  * Keys are encrypted at rest using WordPress AUTH_KEY as the encryption key.

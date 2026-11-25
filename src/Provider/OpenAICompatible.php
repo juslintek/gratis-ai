@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI\Provider;
 
+defined('ABSPATH') || exit;
 use Gratis\AI\Contracts\ModelProviderInterface;
 
 /** Works with any OpenAI-compatible API: OpenAI, Anthropic via proxy, Ollama, LM Studio, vLLM, etc. */

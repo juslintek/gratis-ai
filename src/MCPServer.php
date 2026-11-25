@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI;
 
+defined('ABSPATH') || exit;
 /**
  * MCP (Model Context Protocol) Server.
  * Exposes WordPress site data as tools/resources for AI agents.
@@ -33,17 +34,17 @@ final class MCPServer {
     public static function authenticate(\WP_REST_Request $request): bool {
         // Accept Bearer token or X-API-Key header
         $token = $request->get_header('Authorization');
-        if ($token && str_starts_with($token, 'Bearer ')) {
+        if (is_string($token) && str_starts_with($token, 'Bearer ')) {
             $token = substr($token, 7);
         } else {
             $token = $request->get_header('X-API-Key') ?? '';
         }
         $stored = get_option('gratis_ai_mcp_key', '');
-        if (!$stored) {
+        if (!is_string($stored) || '' === $stored) {
             $stored = wp_generate_password(32, false);
-            update_option('gratis_ai_mcp_key', $stored);
+            update_option('gratis_ai_mcp_key', $stored, false);
         }
-        return $token && hash_equals($stored, $token);
+        return is_string($token) && '' !== $token && hash_equals($stored, $token);
     }
 
     public static function listTools(): \WP_REST_Response {
@@ -85,12 +86,23 @@ final class MCPServer {
     }
 
     private static function toolGetPosts(array $input): array {
-        $posts = get_posts(['post_type' => $input['type'] ?? 'post', 'numberposts' => $input['count'] ?? 10, 'post_status' => 'publish']);
+        $post_type = sanitize_key((string) ($input['type'] ?? 'post'));
+        $count     = min(50, max(1, (int) ($input['count'] ?? 10)));
+        $posts     = get_posts(['post_type' => $post_type ?: 'post', 'numberposts' => $count, 'post_status' => 'publish']);
         return array_map(fn($p) => ['id' => $p->ID, 'title' => $p->post_title, 'date' => $p->post_date, 'url' => get_permalink($p)], $posts);
     }
 
     private static function toolCreatePost(array $input): array {
-        $id = wp_insert_post(['post_title' => $input['title'], 'post_content' => $input['content'] ?? '', 'post_status' => $input['status'] ?? 'draft', 'post_type' => 'post']);
+        $status = sanitize_key((string) ($input['status'] ?? 'draft'));
+        if (!in_array($status, ['draft', 'pending', 'publish'], true)) {
+            $status = 'draft';
+        }
+        $id = wp_insert_post([
+            'post_title'   => sanitize_text_field((string) ($input['title'] ?? '')),
+            'post_content' => wp_kses_post((string) ($input['content'] ?? '')),
+            'post_status'  => $status,
+            'post_type'    => 'post',
+        ]);
         return ['id' => $id, 'url' => get_permalink($id)];
     }
 
