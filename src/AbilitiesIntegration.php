@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI;
 
+defined('ABSPATH') || exit;
 /**
  * WordPress 7.0 Abilities API integration.
  * Registers AI abilities that can be invoked by any AI agent, browser extension, or MCP client.

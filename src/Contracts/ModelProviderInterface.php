@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI\Contracts;
 
+defined('ABSPATH') || exit;
 interface ModelProviderInterface {
 
     public function name(): string;

@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 namespace Gratis\AI;
 
+defined('ABSPATH') || exit;
 use Gratis\AI\Provider\OpenAICompatible;
 
 /**
